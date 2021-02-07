@@ -1,0 +1,100 @@
+!输电塔的模态分析
+FINISH
+/CLEAR
+/PREP7
+
+ET, 1, BEAM188
+
+SECTYPE, 1, BEAM, RECT, beam
+SECDATA, 100, 50
+
+MP, EX, 1, 2E5
+MP, PRXY, 1, 0.3
+MP, DENS, 1, 8E-9
+
+L0 = 9000  !底座边长
+L = 4000  !上层梁段长
+
+!第一层关键点建立
+K, , -L0/2, -L0/2, 0
+K, , L0/2, -L0/2, 0
+K, , L0/2, L0/2, 0
+K, , -L0/2, L0/2, 0
+!第二层关键点建立
+*DO, i, 0, 3, 1
+K, , -L0/2+(L0/4)*(i/3), -L0/2+(L0/4)*(i/3), L*i+2*L
+K, , L0/2-(L0/4)*(i/3), -L0/2+(L0/4)*(i/3), L*i+2*L
+K, , L0/2-(L0/4)*(i/3), L0/2-(L0/4)*(i/3), L*i+2*L
+K, , -L0/2+(L0/4)*(i/3), L0/2-(L0/4)*(i/3), L*i+2*L
+*ENDDO
+!第三层关键点建立
+!若干组
+*DO, i, 1, 4, 1
+K, , -L0/4, -L0/4, 5*L+L*i
+K, , L0/4, -L0/4, 5*L+L*i
+K, , L0/4, L0/4, 5*L+L*i
+K, , -L0/4, L0/4, 5*L+L*i
+*ENDDO
+!第四层关键点建立
+K, , -L0/8, -L0/8, 10*L
+K, , L0/8, -L0/8, 10*L
+K, , L0/8, L0/8, 10*L
+K, , -L0/8, L0/8, 10*L
+!确定每次循环基点 利用循环队列实现
+!外层循环控制定位到每个基点
+!内层循环控制定位到每个基点以后内部两个斜向方向的梁建立
+*DO, j, 0, 3, 1
+*SET, TMP1, MOD(j, 4)+1
+*SET, TMP2, MOD(j+1, 4)+1
+*SET, TMP3, MOD(j+2, 4)+1
+*DO, i, 0, 8, 1
+L, 1+j+i*4, 5+j+i*4
+L, TMP1+4*i, TMP2+4*i+4
+L, TMP2+4*i+4, TMP3+4*i
+*ENDDO
+*ENDDO
+!水平梁的建立
+!算法控制同上
+*DO, j, 1, 9, 1
+*DO, i, 0, 3, 1
+*SET, TMP1, MOD(i, 4)+1
+*SET, TMP2, MOD(i+1, 4)+1
+L, TMP1+j*4, TMP2+j*4
+*ENDDO
+*ENDDO
+!余下点 线的建立
+K, , L0, 0, (17/2)*L
+K, , -L0, 0, (17/2)*L
+
+L, 42, 29
+L, 42, 32
+L, 42, 33
+L, 42, 36
+L, 41, 30
+L, 41, 31
+L, 41, 34
+L, 41, 35
+
+!聚合 分段 划分
+NUMMRG, ALL
+LATT, 1, , ALL, , , , 1
+SMRTSIZE, 1
+LMESH, ALL
+
+/SOLU
+NSEL, S, LOC, Z, 0
+D, ALL, ALL
+!求解器设置
+!模态分析设置
+ANTYPE, 2
+MODOPT, LANB, 15, , ,
+MXPAND, 15
+
+ALLSEL, ALL
+SOLVE
+
+/POST1
+SET, LIST
+
+/ESHAPE, 1
+GPLOT

@@ -1,0 +1,46 @@
+!四分之一孔——校核屈服极限
+FINISH
+/CLEAR
+/PREP7
+
+ET, 1, PLANE182
+
+MP, EX, 1, 2E5
+MP, PRXY, 1, 0.3
+MP, DENS, 1, 8E-9
+
+R = 10  !孔的半径
+L = 70  !正方形边长
+
+!建模
+BLC5, L/2, L/2, L, L
+CYL4, , , , , R, 360
+ASBA, 1, 2
+
+LSEL, S, , , 5, 5, 1
+LESIZE, ALL, , , 20
+LSEL, ALL
+LSEL, U, , , 5, 5, 1
+LESIZE, ALL, , , 10
+
+ALLSEL, ALL
+AATT, 1, , 1
+AMAP, 3, 4, 6, 5, 2
+
+/SOLU
+!除孔段外加线约束
+LSEL, U, , , 5, 5, 1
+DL, ALL, ALL, ALL, ALL
+ALLSEL, ALL
+!孔段加均布线压力
+P1 = 500/(2*3.1415926*R/4)
+LSEL, S, , , 5, 5, 1
+SFL, ALL, PRES, P1
+
+ALLSEL, ALL
+SOLVE
+FINISH
+
+/POST1
+!冯米塞斯应力(等效应力)云图
+PLNSOL, S, EQV

@@ -1,0 +1,62 @@
+/PMACRO
+FINISH
+/CLEAR, start
+/PREP7
+
+!GUI窗口交互式参数定义
+MULTIPRO,'start', 4
+*CSET,1,3,NF,'Node number(1-1326):', 1026 !作用力位于的节点编号
+*CSET,4,6,F1,'Value of Fx:', 0 !x方向分力大小
+*CSET,7,9,F2,'Value of Fy:', 0 !y方向分力大小
+*CSET,10,12,F3,'Value of Fz:', 0 !z方向分力大小
+MULTIPRO,'end'
+*IF,_BUTTON,EQ,1,THEN
+/EOF
+*ENDIF
+
+ET, 1, SHELL181
+
+MP, EX, 1, 2E5
+MP, PRXY, 1, 0.3
+
+SECTYPE, 1, SHELL
+SECDATA, 1.0
+
+!盒体建模
+K, 1, -250, 250, 0
+K, 2, 250, 250, 0
+K, 3, 250, -250, 0
+K, 4, -250, -250, 0
+
+KGEN, 2, ALL, , , 0, 0, 500
+
+A, 3, 4, 8, 7
+A, 3, 4, 1, 2
+A, 5, 6, 2, 1
+A, 5, 6, 7, 8
+A, 6, 2, 3, 7
+A, 5, 1, 4, 8
+
+LESIZE, ALL, 20
+AATT, 1, , 1, , 1
+AMESH, ALL
+
+/SOLU
+
+F, NF, FX, F1
+F, NF, FY, F2
+F, NF, FZ, F3
+
+NSEL, S, LOC, Z, 500
+D, ALL, ALL
+ALLSEL, ALL
+
+SOLVE
+FINISH
+
+/POST1
+/EFACET,1
+
+/ESHAPE, 1
+GPLOT
+PLNSOL, U,Z, 0,1.0

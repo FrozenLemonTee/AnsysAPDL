@@ -1,0 +1,74 @@
+!平板——弹簧振子模型谐响应分析
+FINISH
+/CLEAR
+/FILNAME, HARMONIC_RESPONSE
+/PREP7
+
+MP, EX, 1, 2E5
+MP, PRXY, 1, 0.3
+MP, DENS, 1, 8E-9
+
+!弹簧单元
+ET, 1, COMBIN14
+!质点单元
+ET, 2, MASS21
+!平板单元
+ET, 3, SHELL181
+!定义实常数
+R, 1, 200, 0.1  !弹簧单元实常数
+R, 2, 0.5, 0.5, 0.5  !质点单元实常数
+
+SECTYPE, 3, SHELL
+SECDATA, 5
+
+L = 100  !平板边长
+L0 = 50   !弹簧长度
+
+BLC5, 0, 0, L, L
+
+LESIZE, ALL, , , 10
+AATT, 1, , 3, , 3
+AMESH, ALL
+ALLSEL, ALL
+
+N, , 0, 0, L0
+
+TYPE, 1
+REAL, 1
+E, 81, 122
+
+TYPE, 2
+REAL, 2
+E, 122
+
+/SOLU
+!分析模式：谐响应
+ANTYPE, 3
+!图像设置
+HROUT, ON
+!求解器设置
+EQSLV, PCG, 1E-8
+!输出设置
+OUTPR, BASIC, LAST
+!加约束
+NSEL, S, LOC, X, -L/2
+D, ALL, ALL
+!谐波载荷范围 Hz
+HARFRQ, 0, 10
+!子步数
+NSUBST, 30
+!分部加载
+KBC, 1
+!谐波载荷加载（值为初值）
+ALLSEL, ALL
+F, 122, FZ, 300
+
+ALLSEL, ALL
+SOLVE
+
+!时间历程后处理
+/POST26
+!变量设置：节点
+NSOL, 2, 122, U, Z, uz
+!最终绘图
+PLVAR, 2, 3

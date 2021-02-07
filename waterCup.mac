@@ -1,0 +1,127 @@
+!杯子模型2——研究静水压与热共同作用下杯壁的变形情况
+!==============第一部分——热分析部分==============
+FINISH
+/CLEAR
+/FILNAME, CUP
+/PREP7
+
+
+!热分析单元定义
+ET, 1, SOLID70
+ET, 2, PLANE55
+ET, 3, BEAM188
+
+!材料温度表（定义温度自变量以便填写对应温度的材料参数值）
+MPTEMP, 1, 20
+MPTEMP, 2, 60
+!热传导系数 单位制m
+MPDATA, KXX, 1, 1, 0.02  !20度下
+MPDATA, KXX, 1, 2, 0.035  !60度下
+
+MP, EX, 1, 2E11
+MP, PRXY, 1, 0.3
+MP, ALPX, 1, 1.2E-5
+MP, DENS, 1, 79E3
+
+SECTYPE, 1, BEAM, RECT, beam
+SECDATA, 0.1, 0.05
+
+!单位m
+R0 = 0.35
+R1 = 0.3
+L = 1
+H = 0.05
+!建模
+CYL4, 0, 0, R0, 0, R1, 360
+AL, 5, 6, 7, 8
+WPROTA, , 90
+ASBW, ALL
+WPROTA, , , 90
+ASBW, ALL
+
+LSEL, S, , , 1, 8, 1
+LESIZE, ALL, , , 20
+LSEL, S, , , 10, 11, 1
+LSEL, A, , , 16, 17, 1
+LESIZE, ALL, , , 3
+LSEL, S, , , 12, 15, 1
+LESIZE, ALL, , , 10
+ALLSEL, ALL
+
+ALLSEL, ALL
+AATT, 1, , 2
+AMESH, ALL
+
+EXTOPT, ESIZE, 10
+EXTOPT, ACLEAR, 0
+TYPE, 1
+*DO, i, 7, 12, 1
+VOFFST, i, -H
+*ENDDO
+
+VOFFST, 1, -H
+VOFFST, 2, -H
+
+*DO, i, 9, 12, 1
+VOFFST, i, L
+*ENDDO
+
+NUMMRG, ALL, , , , LOW
+
+/SOLU
+ANTYPE, STATIC, NEW
+
+ASEL, S, , , 1, 2, 1
+ASEL, A, , , 7, 8, 1
+ASEL, A, , , 48, 48, 1
+ASEL, A, , , 58, 58, 1
+ASEL, A, , , 63, 63, 1
+ASEL, A, , , 53, 53, 1
+!杯子内壁设置热载荷(热对流系数 0.05 环境温度 100 即100度热水)
+SFA, ALL, , CONV, 0.05, 100
+ALLSEL, ALL
+ASEL, U, , , 1, 2, 1
+ASEL, U, , , 7, 8, 1
+ASEL, U, , , 48, 48, 1
+ASEL, U, , , 58, 58, 1
+ASEL, U, , , 63, 63, 1
+ASEL, U, , , 53, 53, 1
+!杯子外壁设置热载荷(热对流系数 0.02 环境温度 25 即25度室温)
+SFA, ALL, , CONV, 0.02, 25
+
+ALLSEL, ALL
+SOLVE
+
+/POST1
+
+/EFACET,1
+PLNSOL, TEMP
+
+SAVE, CUP
+FINISH
+
+!==============第二部分——静力学分析部分==============
+/PREP7
+ETCHG, TTS  !单元转换
+
+/SOLU
+LDREAD, TEMP, , , , , CUP, RST  !读取温度场
+NSEL, S, LOC, Z, -H
+D, ALL, ALL
+ALLSEL, ALL
+P0 = H*10E-5  !压强最大值
+!水压梯度函数
+SFGRAD, PRES, 0, Z, L, -10E-5
+ASEL, S, , , 1, 2, 1
+ASEL, A, , , 7, 8, 1
+ASEL, A, , , 48, 48, 1
+ASEL, A, , , 58, 58, 1
+ASEL, A, , , 63, 63, 1
+ASEL, A, , , 53, 53, 1
+SFA, ALL, 1, PRES, P0
+
+ALLSEL, ALL
+SOLVE
+
+/POST1
+PLNSOL, U, SUM, 0, 1.0

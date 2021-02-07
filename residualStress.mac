@@ -1,0 +1,90 @@
+!残余应力检测
+FINISH
+/CLEAR
+/PREP7
+
+ET, 1, SOLID185
+ET, 2, PLANE182
+
+MP, EX, 1, 2E5
+MP, PRXY, 1, 0.3
+MP, DENS, 1, 8E-9
+
+!单位mm
+A = 50  !正方体边长
+R = 10  !钻孔半径
+H = 5   !钻孔深度
+
+!基础平面建立
+BLC5, 0, 0, A, A
+CYL4, 0, 0, 0, 0, R, 360
+ASBA, 1, 2
+AL, 5, 6, 7, 8
+!工作平面切割基础平面
+WPROTA, , 90
+ASBW, ALL
+WPROTA, , , 90
+ASBW, ALL
+!孔边缘段分20份
+LSEL, S, , , 5, 8, 1
+LESIZE, ALL, , , 20
+LSEL, ALL
+!水平及竖直划分线以及图形边缘线分10份
+LSEL, U, , , 5, 8, 1
+LESIZE, ALL, , , 10
+!孔内平面绘制网格
+ALLSEL, ALL
+AATT, 1, , 2
+ASEL, S, , , 7, 8, 1
+ASEL, A, , , 1, 3, 2
+AMESH, ALL
+NUMMRG, ALL, , , , LOW
+ALLSEL, ALL
+!孔周围平面绘制网格
+!映射划分
+AMAP, 9, 12, 6, 5, 10
+AMAP, 10, 9, 7, 6, 12
+AMAP, 11, 9, 7, 8, 13
+AMAP, 12, 13, 8, 5, 10
+!孔外平面单元拉伸成体单元
+EXTOPT, ESIZE, 10
+EXTOPT, ACLEAR, 0
+TYPE, 1
+*DO, i, 9, 12, 1
+VOFFST, i, H  !孔段拉伸
+NUMMRG, ALL, , , , LOW
+VOFFST, i, H-A  !孔段以下部分拉伸
+NUMMRG, ALL, , , , LOW
+*ENDDO
+!孔内平面单元拉伸成体单元
+WPCSYS, -1
+VOFFST, 1, H-A
+VOFFST, 3, H-A
+VOFFST, 7, H-A
+VOFFST, 8, H-A
+
+NUMMRG, ALL, , , , LOW
+
+/SOLU
+AR = 3.1415926535*R*R  !钻孔面积
+F1 = 1500  !载荷和大小
+P1 = F1/AR  !压强
+!孔内平面加均布面压力
+ASEL, S, , , 7, 8, 1
+ASEL, A, , , 1, 3, 2
+SFA, ALL, 1, PRES, P1
+!模型整体底部平面加全约束
+ASEL, S, LOC, Z, H-A
+DA, ALL, ALL
+
+ALLSEL, ALL
+SOLVE
+
+FINISH
+
+/POST1
+/EFACET,1
+
+/ESHAPE, 1
+GPLOT
+PLNSOL, S, EQV

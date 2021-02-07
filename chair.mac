@@ -1,0 +1,107 @@
+!椅子的受力分析
+FINISH
+/CLEAR
+/FILNAME, CHAIR
+/PREP7
+
+!单元类型
+ET, 1, SHELL181
+ET, 2, BEAM188
+!材料属性
+MP, EX, 1, 2E5
+MP, PRXY, 1, 0.3
+!截面 梁
+SECTYPE, 1, BEAM, RECT, beam
+SECDATA, 40, 20
+SECOFFSET, USER, 0, -22.5
+!截面 腿
+SECTYPE, 2, BEAM, CSOLID, rib
+SECDATA, 20
+!截面 板壳
+SECTYPE, 3, SHELL
+SECDATA, 25, 1, , 3, shell
+
+!建模
+BLC5, 0, 0, 500, 500
+
+K, 5, 250, 250, 700
+K, 6, 250, -250, 700
+K, 7, -250, -250, 700
+K, 8, -250, 250, 700
+
+LSTR, 2, 6
+LSTR, 1, 7
+LSTR, 3, 5
+LSTR, 4, 8
+
+K, 9, -250, -250, -500
+K, 10, -250, 250, -500
+
+LSTR, 1, 9
+LSTR, 9, 10
+LSTR, 10, 4
+
+AL, 4, 9, 10, 11
+
+!划分
+LESIZE, ALL, , , 10
+LSEL, S, , , 5, 8, 1
+LATT, 1, , 2, , , , 2
+LMESH, ALL
+NUMMRG, NODE, ALL
+ALLSEL, ALL
+
+AATT, 1, , 1, ,3
+AMESH, ALL
+NUMMRG, NODE, ALL
+
+!建立椅子的梁单元
+TYPE, 2
+
+*DO, i, 0, 7
+E, 85+9*i, 94+9*i
+NUMMRG, NODE, ALL
+*ENDDO
+
+*DO, j, 0, 7
+E, 117+j, 118+j
+NUMMRG, NODE, ALL
+*ENDDO
+
+E, 67, 125
+E, 58, 157
+E, 76, 85
+E, 49, 117
+
+NUMMRG, NODE, ALL
+
+!加约束与载荷
+
+/SOLU
+F, 121, FZ, 10000
+F, 121, FX, 200
+F, 1, FY, 700
+D, 2, UX
+D, 2, UY
+D, 2, UZ
+D, 35, UX
+D, 35, UY
+D, 35, UZ
+D, 24, UX
+D, 24, UY
+D, 24, UZ
+D, 13, UX
+D, 13, UY
+D, 13, UZ
+
+ALLSEL, ALL
+SOLVE
+
+FINISH
+
+/POST1
+/EFACET,1
+
+/ESHAPE, 1
+GPLOT
+PLNSOL, U,Z, 0,1.0
